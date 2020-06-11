@@ -56,11 +56,6 @@ lm1 <- function(formula, data, freqs) {
 }
 
 
-#' Title
-#'
-#' @param x apple
-#' @param level confidence level
-#'
 mean_lwr_upr <- function(x, level = 0.95) {
   alpha <- 1 - level
   c(fit = mean(x), quantile(x, c(alpha / 2, 1 - alpha / 2)) %>% set_names(c("lwr", "upr")))
@@ -168,7 +163,7 @@ sigma.blblm_parallel <- function(object, confidence = FALSE, level = 0.95, clust
       return(sigma)
     }
   }
-  else{
+  else {
     suppressWarnings(future::plan(future::multiprocess, workers = cluster))
     sigma <- mean(future_map_dbl(est, ~ mean(map_dbl(., "sigma"))))
     if (confidence) {
@@ -211,7 +206,8 @@ predict.blblm_parallel <- function(object, new_data, confidence = FALSE, level =
       future_map_mean(est, ~ future_map_cbind(., ~ X %*% .$coef) %>%
                         apply(1, mean_lwr_upr, level = level) %>%
                         t())
-    } else {
+    }
+    else {
       future_map_mean(est, ~ future_map_cbind(., ~ X %*% .$coef) %>% rowMeans())
     }
     #closeAllConnections()
@@ -258,7 +254,6 @@ confint.blblm_parallel <- function(object, parm = NULL, level = 0.95, cluster = 
       future_map_mean(est, ~ future_map_dbl(., list("coef", p)) %>% quantile(c(alpha / 2, 1 - alpha / 2)))
     })
     future:::ClusterRegistry("stop")
-
   }
   else {
     #suppressWarnings(plan(multiprocess, workers = cluster))
@@ -521,7 +516,6 @@ blblm_parallel_list <- function(formula, file_names, B = 5000, cluster = 1){
     suppressWarnings(plan(multiprocess, workers = cluster))
     estimates = future_map(file_names, function(z){
       suppressMessages({file01 =readr::read_csv(z)})
-
       lm_each_subsample(formula = formula, data = file01, n = nrow(file01), B = B)
       #close(file01)
     })
@@ -531,8 +525,8 @@ blblm_parallel_list <- function(formula, file_names, B = 5000, cluster = 1){
   }
   else{
     estimates = lapply(file_names, function(z){
-      suppressMessages({file01 = readr::read_csv(z)})
-      lm_each_subsample(formula = formula, data = file01, n = nrow(file01), B = B)
+    suppressMessages({file01 = readr::read_csv(z)})
+    lm_each_subsample(formula = formula, data = file01, n = nrow(file01), B = B)
     })
   }
   res <- list(estimates = estimates, formula = formula)
