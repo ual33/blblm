@@ -1,0 +1,136 @@
+---
+title: "blblm: Bag of Little Bootstrap Linear Model Student Modified Ver."
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{packageDes}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+Linear Regression, parallel Linear Regression, parallel General Linear regression with Little Bag of Bootstraps modified based on the original blblm package. The main improvement of this package is to add parallel functionality to the original blblm package. When requested number of clusters is larger than 1, the parallel computing will be in effect. Otherwise original formula will be executed. Also, the package also expanded the lm to fitting general linear models such as logistic regression. Finally, another function is allowed to read multiple fraction of the same data frame and compute coefficients for each file. Memory can be saved this way.
+
+
+# Basic Information
+Version: 0.1.0\
+Depends:	R (≥ 3.6.3)\
+Origin: Professor Randy Lai\
+Author: Libin Feng\
+Maintainer: Libin Feng <lbfeng@ucdavis.edu>\
+Description: \
+License: MIT + file LICENSE\
+Encoding: UTF-8\
+LazyData: true\
+Suggests: testthat (>= 2.1.0), knitr, rmarkdown\
+Imports: purrr, magrittr, future, furrr, parallel, readr\
+Roxygen: list(markdown = TRUE)\
+RoxygenNote: 7.1.0\
+VignetteBuilder: knitr\
+Due: 2020/06/10\
+
+# Documented
+
+## How to Fit a `lm` Linear Model with implementation of parallel computing
+
+The original blblm functions implement several randomly weighted linear models on splitted data sets. 
+Here in the modified package, parallel computing is able to be used on the data set. For example:
+
+Here I used the smaller bank data set from the UCI Machine Learning Repository.
+
+```{r setup}
+library(blblm)
+```
+
+```{r}
+bank <- read.csv("~/bank.csv", sep=";")
+bank$y0 = as.numeric(as.factor(bank$y))-1
+```
+
+### Construct a blblm_parallel Object
+
+You can specify number of clusters to use for the object. However, cluster will only be used when it is larger than 1. 
+
+
+```{r}
+objekt1 = blblm_parallel(duration~age+balance, bank, m=10, B = 500, cluster = 4)
+```
+
+### Attributes
+The object has two attributes, `object$formula` and `object$estimates`. The latter is a list of coefficients and sigmas for each booted lm.
+
+
+```{r}
+objekt1$estimates[1][[1]][1:5]
+objekt1$formula
+```
+### Methods
+
+We can check everything about this class of blblm_parallel: coefficient, confidence intervals and sigma methods of an blblm_parallel object.
+
+```{r}
+coef(objekt1)
+confint(objekt1,level = 0.9, cluster = 4)
+sigma(objekt1,confidence = TRUE)
+```
+### Prediction
+we can also perform some prediction or provide a confidence interval on the new data set
+```{r}
+new_ones = data.frame('balance' = c(3000,4000,2000), 'age' = c(40,20,12))
+predict(objekt1, new_data = new_ones,confidence = TRUE, level = 0.9, cluster = 4)
+```
+
+## How to Fit a `glm` Linear Model with implementation of parallel computing
+
+Same thing is expanded to a general linear model case, but not the prediction because it highly depends on the family of glm model. Here I take logistic regression as example and the default is also logistic regression.
+
+### Construction
+
+You can specify number of clusters to use for the blbglm_parallel object. However, cluster will only be used when it is larger than 1. 
+
+```{r}
+objekt2 = blbglm_parallel(y0~age+balance+duration, bank, m=10, B = 500, cluster = 2)
+```
+### Attributes
+The object has two attributes, `object$formula` and `object$estimates`. The latter is a list of coefficients and sigmas for each booted lm.
+
+```{r}
+objekt2$estimates[1][[1]][1:5]
+objekt2$formula
+```
+
+### Methods
+coefficient, confidence intervals and sigma methods of an blbglm_parallel object.
+
+```{r}
+coef(objekt2)
+confint(objekt2,level = 0.9, cluster = 4)
+sigma(objekt2,confidence = TRUE)
+```
+
+## Read a list of files and perform booted lm regression on each files.
+
+Since the output is a blblm_parallel class, same things can be done on the object such as sigma, coefficient and confidence intervals. This is just basically change the splitted partial file to a readed external `*.csv` file. However if the data set is too small, the result and the coefficient, sigma and confidence interval methods will not work as expected due to multicoliearity. Here I used manually generated 4 small partition of mtcars data set as a try.
+
+### Construction
+
+```{r}
+listnames = c('~/files/data01.csv', '~/files/data02.csv',
+'~/files/data03.csv', '~/files/data04.csv')
+object3 = blblm_parallel_list(mpg ~ cyl + hp, listnames, B = 100, cluster = 2)
+
+
+```
+
+### Methods (Does not work well when data size is too small for each file)
+
+```{r}
+coef(object3)
+# confint(object3,level = 0.9, cluster = 4)
+sigma(object3,confidence = TRUE)
+```
+

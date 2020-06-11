@@ -4,11 +4,10 @@
 \name{blblm-package}
 \alias{blblm}
 \alias{blblm-package}
-\title{blblm: What the Package Does (Title Case)}
+\title{blblm: Bag of Little Bootstrap Linear Models Student Modified Version}
 \description{
-More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Linear Regression, parallel Linear Regression, parallel General Linear regression with Little Bag of Bootstraps modified based on the original blblm package.
 }
 \details{
-Linear Regression with Little Bag of Bootstraps
+Linear Regression, parallel Linear Regression, parallel General Linear regression with Little Bag of Bootstraps modified based on the original blblm package
 }
